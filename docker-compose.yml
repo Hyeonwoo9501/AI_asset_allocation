@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # CPU-only service (recommended for most users)
+  transformer-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: ai_asset_allocation_cpu
+    volumes:
+      # Mount project directory
+      - .:/app
+      # Mount data directories
+      - ./data:/app/data
+      - ./results:/app/results
+    environment:
+      - FRED_API_KEY=${FRED_API_KEY}
+      - PYTHONPATH=/app
+    ports:
+      - "6006:6006"  # TensorBoard
+      - "8888:8888"  # Jupyter
+    stdin_open: true
+    tty: true
+    command: bash
+    networks:
+      - ai_network
+
+  # GPU service (requires NVIDIA GPU and nvidia-docker)
+  transformer-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_asset_allocation_gpu
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./results:/app/results
+    environment:
+      - FRED_API_KEY=${FRED_API_KEY}
+      - PYTHONPATH=/app
+      - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "6007:6006"  # TensorBoard
+      - "8889:8888"  # Jupyter
+    stdin_open: true
+    tty: true
+    command: bash
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - ai_network
+
+  # Jupyter notebook service
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: ai_asset_allocation_jupyter
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./notebooks:/app/notebooks
+    environment:
+      - FRED_API_KEY=${FRED_API_KEY}
+      - PYTHONPATH=/app
+    ports:
+      - "8888:8888"
+    command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+    networks:
+      - ai_network
+
+  # TensorBoard service
+  tensorboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: ai_asset_allocation_tensorboard
+    volumes:
+      - ./results/logs:/app/results/logs
+    ports:
+      - "6006:6006"
+    command: tensorboard --logdir=/app/results/logs --host=0.0.0.0 --port=6006
+    networks:
+      - ai_network
+
+networks:
+  ai_network:
+    driver: bridge
