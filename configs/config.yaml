@@ -1,6 +1,6 @@
 # Data Configuration
 data:
-  # US Sector ETFs
+  # US Sector ETFs (11)
   sector_etfs:
     - XLK  # Technology
     - XLF  # Financial
@@ -13,6 +13,25 @@ data:
     - XLRE # Real Estate
     - XLC  # Communication Services
     - XLU  # Utilities
+
+  # Additional ETFs (14)
+  additional_etfs:
+    # Factor ETFs (6)
+    - IWD   # Russell 1000 Value
+    - IWF   # Russell 1000 Growth
+    - IWM   # Russell 2000 Small Cap
+    - SPY   # S&P 500 Large Cap
+    - QUAL  # Quality Factor
+    - MTUM  # Momentum Factor
+    # Asset Allocation ETFs (8)
+    - TLT   # 20Y Treasury Bond
+    - IEF   # 7-10Y Treasury Bond
+    - LQD   # Investment Grade Corporate Bond
+    - HYG   # High Yield Bond
+    - GLD   # Gold
+    - USO   # Oil
+    - EFA   # Developed Markets (ex-US)
+    - EEM   # Emerging Markets
 
   # FRED Macro Indicators
   macro_indicators:
@@ -60,12 +79,19 @@ model:
     num_layers: 2
     dropout: 0.1
 
-  # Factor dimension
-  factor_dim: 64
+  # Factor dimension (expanded for 25 assets)
+  factor_dim: 128
+
+  # Factor Selection
+  factor_selection:
+    enabled: true
+    method: "adaptive"  # adaptive, sharpe, return_vol_ratio
+    min_sharpe: 0.3     # minimum sharpe ratio to keep factor
+    volatility_penalty: 1.0  # penalty weight for high volatility factors
 
   # Prediction head
   prediction:
-    hidden_dims: [128, 64]
+    hidden_dims: [256, 128]  # expanded for more capacity
 
 # Loss Configuration
 loss:
