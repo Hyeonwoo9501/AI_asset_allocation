@@ -17,6 +17,8 @@ class MarketDataLoader:
     def __init__(self, config: dict):
         self.config = config
         self.sector_etfs = config['data']['sector_etfs']
+        self.additional_etfs = config['data'].get('additional_etfs', [])
+        self.all_etfs = self.sector_etfs + self.additional_etfs
         self.macro_indicators = config['data']['macro_indicators']
         self.start_date = config['data']['start_date']
         self.end_date = config['data']['end_date']
@@ -31,12 +33,12 @@ class MarketDataLoader:
             print("Warning: FRED API key not set. Set it in environment or here.")
 
     def fetch_etf_data(self) -> pd.DataFrame:
-        """Fetch ETF price data and calculate returns"""
-        print("Fetching ETF data...")
+        """Fetch ETF price data and calculate returns (all ETFs)"""
+        print(f"Fetching ETF data ({len(self.all_etfs)} ETFs)...")
 
         # Download ETF prices
         data = yf.download(
-            self.sector_etfs,
+            self.all_etfs,
             start=self.start_date,
             end=self.end_date,
             progress=False
